@@ -6,22 +6,49 @@ import time
 from PIL import Image
 
 
-DURATION = 10000
-ALPHA = 300
+
+def createBezier(pts):
+    p0 = np.array(pts[0])
+    p1 = np.array(pts[1])
+    p2 = np.array(pts[2])
+    p3 = np.array(pts[3])
+
+    formula = lambda t : (pow(1-t, 3) * p0) + (3 * pow(1-t, 2) * t * p1) + (3 * (1-t) * pow(t, 2) * p2) + (pow(t, 3) * p3)
+
+    return formula
+
+DURATION = 250
+ALPHA = 3000
 TOPDOWN = True
 POSITION_NOT_SET = True
 
 physicsClient = p.connect(p.GUI)
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
 
-p.setGravity(0, 0, 0)
+p.setGravity(0, 0, -10)
 planeId = p.loadURDF('plane.urdf')
 dogStartPos = [0, 0, 0.5]
 dogStartOrientation = p.getQuaternionFromEuler([0, 0, 0])
 dogId = p.loadURDF("model/a1.urdf", dogStartPos, dogStartOrientation)
-p.loadURDF("r2d2.urdf", [10, 10, 4])
-
 targetPos = [2, 2, 1]
+
+p0 = [0, 0, .5]
+p1 = [2, 0, .5]
+p2 = [0, 4, .5]
+p3 = [3, 3, .5]
+
+p.loadURDF("r2d2.urdf", p1)
+p.loadURDF("r2d2.urdf", p2)
+p.loadURDF("r2d2.urdf", p3)
+
+
+bzPoints = [p0, p1, p2, p3]
+
+bezier = createBezier(bzPoints)
+
+ts = 1 / DURATION
+
+t = 0
 
 #cam settings
 
@@ -29,7 +56,7 @@ targetPos = [2, 2, 1]
 
 cyaw=0
 cpitch=-90
-cdist=20
+cdist=5
 
 pos, orienation = p.getBasePositionAndOrientation(dogId)
 
@@ -37,11 +64,55 @@ if(TOPDOWN):
     cpitch = -89
 p.resetDebugVisualizerCamera( cameraDistance=cdist, cameraYaw=cyaw, cameraPitch=cpitch, cameraTargetPosition=pos)
 
+for t in np.arange(0, 1, ts):
+    print(t)
+    p.stepSimulation()
+    targetPos = bezier(t)
+    p.resetBasePositionAndOrientation(dogId, targetPos, dogStartOrientation)
+    print(targetPos)
 
+    #dogPos, dogOrn = p.getBasePositionAndOrientation(dogId)
+    #rigidBody.setWorldTransform
+    #force = 300 * (np.array(targetPos) - np.array(dogPos))
+    #p.applyExternalForce(objectUniqueId=dogId, linkIndex=-1,
+    #                     forceObj=force, posObj=dogPos, flags=p.WORLD_FRAME)
+    
+    time.sleep(1./240.)
 
+"""
 while(1):
     p.stepSimulation()
 
+
+    dogPos, dogOrn = p.getBasePositionAndOrientation(dogId)
+
+    force = 300 * (np.array(targetPos) - np.array(dogPos))
+    p.applyExternalForce(objectUniqueId=dogId, linkIndex=-1,
+                         forceObj=force, posObj=dogPos, flags=p.WORLD_FRAME)
+
+    #keys = p.getKeyboardEvents()
+    time.sleep(1./240.)
+
+    #do nothing
+    """
+
+# Run the simulation for a fixed amount of steps.
+"""for i in range(20):
+    position, orientation = p.getBasePositionAndOrientation(r2d2)
+    x, y, z = position
+    roll, pitch, yaw = p.getEulerFromQuaternion(orientation)
+    print(f"{i:3}: x={x:0.10f}, y={y:0.10f}, z={z:0.10f}), roll={roll:0.10f}, pitch={pitch:0.10f}, yaw={yaw:0.10f}")
+    p.stepSimulation()
+
+
+for i in range (10000):
+   p.stepSimulation()
+   time.sleep(1./100.)"""
+
+#p.disconnect()
+
+"""
+def getPositionOnClick():
     if (POSITION_NOT_SET):
         mouseEvents = p.getMouseEvents(physicsClient)
         if (len(mouseEvents) > 0 and mouseEvents[0][0] == 2):
@@ -77,30 +148,4 @@ while(1):
 
             print(pos)
             targetPos = [pos[0], pos[1], 0]
-
-
-    dogPos, dogOrn = p.getBasePositionAndOrientation(dogId)
-
-    force = 300 * (np.array(targetPos) - np.array(dogPos))
-    p.applyExternalForce(objectUniqueId=dogId, linkIndex=-1,
-                         forceObj=force, posObj=dogPos, flags=p.WORLD_FRAME)
-
-    #keys = p.getKeyboardEvents()
-    time.sleep(1./240.)
-
-    #do nothing
-
-# Run the simulation for a fixed amount of steps.
-"""for i in range(20):
-    position, orientation = p.getBasePositionAndOrientation(r2d2)
-    x, y, z = position
-    roll, pitch, yaw = p.getEulerFromQuaternion(orientation)
-    print(f"{i:3}: x={x:0.10f}, y={y:0.10f}, z={z:0.10f}), roll={roll:0.10f}, pitch={pitch:0.10f}, yaw={yaw:0.10f}")
-    p.stepSimulation()
-
-
-for i in range (10000):
-   p.stepSimulation()
-   time.sleep(1./100.)"""
-
-#p.disconnect()
+"""
