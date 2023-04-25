@@ -17,10 +17,11 @@ def createBezier(pts):
 
     return formula
 
-DURATION = 250
+VELOCITY = 1
 ALPHA = 3000
 TOPDOWN = True
 POSITION_NOT_SET = True
+STEP = .25
 
 physicsClient = p.connect(p.GUI)
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -37,16 +38,15 @@ p1 = [2, 0, .5]
 p2 = [0, 4, .5]
 p3 = [3, 3, .5]
 
-p.loadURDF("r2d2.urdf", p1)
-p.loadURDF("r2d2.urdf", p2)
-p.loadURDF("r2d2.urdf", p3)
+p1Id = p.loadURDF("model/testcube.urdf", p1)
+p2Id = p.loadURDF("model/testcube.urdf", p2)
+p3Id = p.loadURDF("model/testcube.urdf", p3)
 
 
 bzPoints = [p0, p1, p2, p3]
 
 bezier = createBezier(bzPoints)
 
-ts = 1 / DURATION
 
 t = 0
 
@@ -64,12 +64,76 @@ if(TOPDOWN):
     cpitch = -89
 p.resetDebugVisualizerCamera( cameraDistance=cdist, cameraYaw=cyaw, cameraPitch=cpitch, cameraTargetPosition=pos)
 
-for t in np.arange(0, 1, ts):
-    print(t)
+currentPoint = p1Id
+
+while(1):
+    keys = p.getKeyboardEvents()
     p.stepSimulation()
-    targetPos = bezier(t)
-    p.resetBasePositionAndOrientation(dogId, targetPos, dogStartOrientation)
-    print(targetPos)
+
+    #get point to change
+    if keys.get(ord('1')):
+        currentPoint = p1Id
+    
+    if keys.get(ord('2')):
+        currentPoint = p2Id
+
+    if keys.get(ord('3')):
+        currentPoint = p3Id
+
+    #change point position
+    if keys.get(ord('h')) or keys.get(ord('b')) or keys.get(ord('n')) or keys.get(ord('m')):
+        ptpos, _ = p.getBasePositionAndOrientation(currentPoint)
+
+        if keys.get(ord('h')):
+            newPosition = [ptpos[0], ptpos[1] + STEP, ptpos[2]]
+        
+        if keys.get(ord('b')):
+            newPosition = [ptpos[0] - STEP, ptpos[1], ptpos[2]]
+
+        if keys.get(ord('n')):
+            newPosition = [ptpos[0], ptpos[1] - STEP, ptpos[2]]
+
+        if keys.get(ord('m')):
+            newPosition = [ptpos[0] + STEP, ptpos[1], ptpos[2]]
+
+        p.resetBasePositionAndOrientation(currentPoint, newPosition, dogStartOrientation)
+
+    # change camera zoom
+    if keys.get(ord('z')):  #Z
+        cdist+=.5
+    if keys.get(ord('x')):  #X
+        cdist-=.5
+
+    p.resetDebugVisualizerCamera( cameraDistance=cdist, cameraYaw=cyaw, cameraPitch=cpitch, cameraTargetPosition=pos)
+
+
+    if keys.get(ord(' ')): #D (change to space later)
+        print('a')
+        p.resetBasePositionAndOrientation(dogId, dogStartPos, dogStartOrientation)
+
+        p1, _ = p.getBasePositionAndOrientation(p1Id)
+        p2, _ = p.getBasePositionAndOrientation(p2Id)
+        p3, _ = p.getBasePositionAndOrientation(p3Id)
+
+
+        bzPoints = [p0, p1, p2, p3]
+
+        bezier = createBezier(bzPoints)
+
+        manhattan = 0
+        for i in range(3):
+            pt1 = bzPoints[i]
+            pt2 = bzPoints[i+1]
+
+            manhattan += sum(abs(np.subtract(pt1, pt2)))
+            print(manhattan)
+
+        ts = 1.0/(manhattan / VELOCITY)
+
+        for t in np.arange(0, 1, ts):
+            p.stepSimulation()
+            targetPos = bezier(t)
+            p.resetBasePositionAndOrientation(dogId, targetPos, dogStartOrientation)
 
     #dogPos, dogOrn = p.getBasePositionAndOrientation(dogId)
     #rigidBody.setWorldTransform
