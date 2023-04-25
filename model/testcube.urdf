@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<robot name="cube">
+  <material name="orange">
+    <color rgba="1.0 0.423529411765 0.0392156862745 1.0"/>
+  </material>
+  <link name="base_link">
+
+    <collision>
+      <geometry>
+        <box size="0 0 0"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <mass value="0"/>
+    	<inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+  	</inertial>
+
+    <visual>
+      <geometry>
+        <box size=".3 .3 .3"/>
+      </geometry>
+      <material name="orange"/>
+    </visual>
+
+  </link>
+</robot>
