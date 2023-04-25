@@ -17,7 +17,7 @@ def createBezier(pts):
 
     return formula
 
-VELOCITY = 1
+VELOCITY = 1/1000
 ALPHA = 3000
 TOPDOWN = True
 POSITION_NOT_SET = True
@@ -35,8 +35,8 @@ targetPos = [2, 2, 1]
 
 p0 = [0, 0, .5]
 p1 = [2, 0, .5]
-p2 = [0, 4, .5]
-p3 = [3, 3, .5]
+p2 = [3, 3, .5]
+p3 = [0, 4, .5]
 
 p1Id = p.loadURDF("model/testcube.urdf", p1)
 p2Id = p.loadURDF("model/testcube.urdf", p2)
@@ -108,7 +108,6 @@ while(1):
 
 
     if keys.get(ord(' ')): #D (change to space later)
-        print('a')
         p.resetBasePositionAndOrientation(dogId, dogStartPos, dogStartOrientation)
 
         p1, _ = p.getBasePositionAndOrientation(p1Id)
@@ -126,7 +125,6 @@ while(1):
             pt2 = bzPoints[i+1]
 
             manhattan += sum(abs(np.subtract(pt1, pt2)))
-            print(manhattan)
 
         ts = 1.0/(manhattan / VELOCITY)
 
