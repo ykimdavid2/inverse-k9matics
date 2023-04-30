@@ -107,7 +107,8 @@ while(1):
     p.resetDebugVisualizerCamera( cameraDistance=cdist, cameraYaw=cyaw, cameraPitch=cpitch, cameraTargetPosition=pos)
 
 
-    if keys.get(ord(' ')): #D (change to space later)
+    #if keys.get(ord(' ')): #D (change to space later)
+    if ord(' ') in keys and keys[ord(' ')]&p.KEY_WAS_TRIGGERED:
         p.resetBasePositionAndOrientation(dogId, dogStartPos, dogStartOrientation)
 
         p1, _ = p.getBasePositionAndOrientation(p1Id)
