@@ -33,8 +33,8 @@ dogStartOrientation = p.getQuaternionFromEuler([0, 0, 0])
 dogId = p.loadURDF("model/a1.urdf", dogStartPos, dogStartOrientation)
 targetPos = [2, 2, 1]
 
-for i in range(21):
-    print(p.getJointInfo(dogId, i))
+#for i in range(21):
+    #print(p.getJointInfo(dogId, i))
     
     #h, u, l
 #FR: 1, 3, 4
