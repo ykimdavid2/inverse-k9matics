@@ -135,7 +135,6 @@ while(1):
             pt2 = bzPoints[i+1]
 
             manhattan += sum(abs(np.subtract(pt1, pt2)))
-
         ts = 1.0/(manhattan / VELOCITY)
 
         for t in np.arange(0, 1, ts):
