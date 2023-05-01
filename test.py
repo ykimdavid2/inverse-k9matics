@@ -5,7 +5,7 @@ import numpy as np
 import time
 from PIL import Image
 
-
+from quadsim.robots import a1
 
 def createBezier(pts):
     p0 = np.array(pts[0])
@@ -17,7 +17,7 @@ def createBezier(pts):
 
     return formula
 
-VELOCITY = 1/1000
+VELOCITY = 1/1500
 ALPHA = 3000
 TOPDOWN = True
 POSITION_NOT_SET = True
@@ -32,6 +32,15 @@ dogStartPos = [0, 0, 0.5]
 dogStartOrientation = p.getQuaternionFromEuler([0, 0, 0])
 dogId = p.loadURDF("model/a1.urdf", dogStartPos, dogStartOrientation)
 targetPos = [2, 2, 1]
+
+for i in range(21):
+    print(p.getJointInfo(dogId, i))
+    
+    #h, u, l
+#FR: 1, 3, 4
+#FL: 6, 8, 9
+#RR: 11, 13, 14
+#RL: 16, 18, 19
 
 p0 = [0, 0, .5]
 p1 = [2, 0, .5]
@@ -79,34 +88,34 @@ while(1):
 
     if keys.get(ord('3')):
         currentPoint = p3Id
-
+        
     #change point position
     if keys.get(ord('h')) or keys.get(ord('b')) or keys.get(ord('n')) or keys.get(ord('m')):
         ptpos, _ = p.getBasePositionAndOrientation(currentPoint)
 
-        if keys.get(ord('h')):
+        if keys.get(ord('h')) and keys[ord('h')]&p.KEY_WAS_TRIGGERED:
             newPosition = [ptpos[0], ptpos[1] + STEP, ptpos[2]]
         
-        if keys.get(ord('b')):
+        if keys.get(ord('b')) and keys[ord('b')]&p.KEY_WAS_TRIGGERED:
             newPosition = [ptpos[0] - STEP, ptpos[1], ptpos[2]]
 
-        if keys.get(ord('n')):
+        if keys.get(ord('n')) and keys[ord('n')]&p.KEY_WAS_TRIGGERED:
             newPosition = [ptpos[0], ptpos[1] - STEP, ptpos[2]]
 
-        if keys.get(ord('m')):
+        if keys.get(ord('m')) and keys[ord('m')]&p.KEY_WAS_TRIGGERED:
             newPosition = [ptpos[0] + STEP, ptpos[1], ptpos[2]]
 
         p.resetBasePositionAndOrientation(currentPoint, newPosition, dogStartOrientation)
 
     # change camera zoom
-    if keys.get(ord('z')):  #Z
+    if keys.get(ord('z')) and keys[ord('z')]&p.KEY_WAS_TRIGGERED:  #Z
         cdist+=.5
-    if keys.get(ord('x')):  #X
+    if keys.get(ord('x')) and keys[ord('x')]&p.KEY_WAS_TRIGGERED:  #X
         cdist-=.5
 
     p.resetDebugVisualizerCamera( cameraDistance=cdist, cameraYaw=cyaw, cameraPitch=cpitch, cameraTargetPosition=pos)
-
-
+    p.resetBasePositionAndOrientation(dogId, pos, dogStartOrientation)
+    
     #if keys.get(ord(' ')): #D (change to space later)
     if ord(' ') in keys and keys[ord(' ')]&p.KEY_WAS_TRIGGERED:
         p.resetBasePositionAndOrientation(dogId, dogStartPos, dogStartOrientation)
@@ -130,10 +139,19 @@ while(1):
         ts = 1.0/(manhattan / VELOCITY)
 
         for t in np.arange(0, 1, ts):
+            p.resetDebugVisualizerCamera( cameraDistance=cdist, cameraYaw=30, cameraPitch=-30, cameraTargetPosition=targetPos)
             p.stepSimulation()
             targetPos = bezier(t)
-            p.resetBasePositionAndOrientation(dogId, targetPos, dogStartOrientation)
+            jointindices =    [ 1,   3,   4,   6,   8,   9,  11,  13,  14,  16,  18,  19]
+            targetpositions = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+            forces =          [50,  50,  50,  50,  50,  50,  50,  50,  50,  50,  50,  50]
+            p.setJointMotorControlArray(dogId,[8, 13],p.POSITION_CONTROL,targetPositions=[0.5, 0.5],forces=[50, 50])
+            #p.setJointMotorControlArray(dogId,[3, 18],p.POSITION_CONTROL,targetPositions=[0.5, 0.5],forces=[1000, 1000])
+            #p.resetBasePositionAndOrientation(dogId, targetPos, dogStartOrientation)
 
+        for t in np.arange(0, 1, .005):
+            p.stepSimulation()
+    
     #dogPos, dogOrn = p.getBasePositionAndOrientation(dogId)
     #rigidBody.setWorldTransform
     #force = 300 * (np.array(targetPos) - np.array(dogPos))
