@@ -41,7 +41,7 @@ def leg_ik(x, y, l1, l2):
     
     return (theta1, theta2)
 
-def foot_path(t, length=0.2, body_height = 0.3, gait_height = 0.05):
+def foot_path(t, length=0.2, body_height = 0.3, gait_height = 0.03):
     # t in range [0, 1]
     # swing portion of code
     t = t % 1

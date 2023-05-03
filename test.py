@@ -24,24 +24,35 @@ def createBezier(pts):
 
     return formula
 
-def drawdebugSquares(pts):
+def drawdebugSquares(pts,heading):
     for pt in pts:
         pt = np.array(pt)
-        r = 0.02
+        r = 0.01
         #print(pt+[r,r,0] )
-        p.addUserDebugLine(pt+[r,r,0]  ,pt+[r,-r,0] , [0,0,1])
-        p.addUserDebugLine(pt+[r,-r,0] ,pt+[-r,-r,0], [0,0,1])
-        p.addUserDebugLine(pt+[-r,-r,0],pt+[-r,r,0] , [0,0,1])
-        p.addUserDebugLine(pt+[-r,r,0] ,pt+[r,r,0]  , [0,0,1] )
+        rot = np.array([[np.cos(heading), -np.sin(heading)],
+                   [np.sin(heading), np.cos(heading)]])
+        FR = np.matmul(rot,np.array([r,r]))
+        FL = np.matmul(rot,np.array([-r,r]))
+        RR = np.matmul(rot,np.array([r,-r]))
+        RL = np.matmul(rot,np.array([-r,-r]))
+        FR = np.concatenate((FR,np.zeros(1)))
+        FL = np.concatenate((FL,np.zeros(1)))
+        RR = np.concatenate((RR,np.zeros(1)))
+        RL = np.concatenate((RL,np.zeros(1)))
+
+        p.addUserDebugLine(pt+FR ,pt+FL , [0,0,1])
+        p.addUserDebugLine(pt+FL ,pt+RL, [0,0,1])
+        p.addUserDebugLine(pt+RL ,pt+RR , [0,0,1])
+        p.addUserDebugLine(pt+RR ,pt+FR  , [0,0,1] )
     return
 
-def getStepPositions(pos,heading):
+def getStepPositions(pos,heading,step):
     pos = np.array([pos[0],pos[1]])
     rot = np.array([[np.cos(heading), -np.sin(heading)],
                    [np.sin(heading), np.cos(heading)]])
 
-    forwardstep = 0.15
-    backstep = 0.10
+    forwardstep = .1
+    backstep = .1
     sFL = np.matmul(rot,np.array([0.15 + forwardstep,0.15]))
     sFR = np.matmul(rot,np.array([0.15 + forwardstep,-0.15]))
     sRL = np.matmul(rot,np.array([-0.15 + backstep,0.15]))
@@ -111,16 +122,14 @@ JOINTS = [
     16,18,19
 ]
 
-
-
 p.setJointMotorControlArray(dogId,JOINTS,controlMode=p.POSITION_CONTROL,targetPositions=DEFAULT_JOINT_POS)
 
 
 # Create Control Points
 p0 = [0, 0, h]
-p1 = [2, 0, h]
-p2 = [3, 3, h]
-p3 = [0, 4, h]
+p1 = [2, -1, h]
+p2 = [4, 2, h]
+p3 = [6, -3, h]
 
 p1Id = p.loadURDF("model/testcube.urdf", p1)
 p2Id = p.loadURDF("model/testcube.urdf", p2)
@@ -131,14 +140,17 @@ sFL = np.array([0.3,0.15,1e-4])
 sFR = np.array([0.3,-0.15,1e-4])
 sRL = np.array([-0.1,0.15,1e-4])
 sRR = np.array([-0.1,-0.15,1e-4])
-drawdebugSquares(getStepPositions(dogStartPos,0))
-
 
 bzPoints = [p0, p1, p2, p3]
 
 bezier = createBezier(bzPoints)
 
 t = 0
+
+# Dog Gait Settings
+path_period = 1550  # Period that path takes
+gait_length = 0.15 # Largest step size
+body_height = 0.3 # Height of hips above ground
 
 # Camera Settings
 cyaw=0
@@ -153,7 +165,7 @@ p.resetDebugVisualizerCamera( cameraDistance=cdist, cameraYaw=cyaw, cameraPitch=
 
 currentPoint = p1Id
 
-closeup = True
+closeup = False
 if(closeup):
     p.resetDebugVisualizerCamera( cameraDistance=.75, cameraYaw=30, cameraPitch=-30, cameraTargetPosition=dogStartPos)
 
@@ -210,6 +222,7 @@ while(1):
     if not closeup:
         p.resetDebugVisualizerCamera( cameraDistance=cdist, cameraYaw=cyaw, cameraPitch=cpitch, cameraTargetPosition=pos)
     
+    # Reset and Visualize Path
     if keys.get(ord('c')) and keys[ord('c')]&p.KEY_WAS_TRIGGERED:
         p.removeAllUserDebugItems()
         p.resetBasePositionAndOrientation(dogId, [0,0,0.45], dogStartOrientation)
@@ -218,8 +231,7 @@ while(1):
         sFR = np.array([0.3,-0.15,1e-4])
         sRL = np.array([-0.1,0.15,1e-4])
         sRR = np.array([-0.1,-0.15,1e-4])
-        drawdebugSquares([sFL, sFR, sRL, sRR])
-        ([sFL, sFR, sRL, sRR])
+        drawdebugSquares([sFL, sFR, sRL, sRR],0)
         lastPos = dogStartPos
         targetPos = dogStartPos
 
@@ -241,11 +253,14 @@ while(1):
 
         linecount = 0
         for t in np.arange(0, 1, ts):
-            if linecount == 3000:
+            if (linecount % 3000) == 0:
                 p.addUserDebugLine(lastPos,targetPos,[1,0,0]) 
                 lastPos = targetPos
-                linecount = 0
             targetPos = bezier(t)
+            yaw = math.atan2(targetPos[1]-lastPos[1], targetPos[0]-lastPos[0])
+            if (linecount % math.floor(path_period)) == 0:
+                FR, FL, RR, RL, sFR, sFL, sRR, sRL = getStepPositions(targetPos,yaw,gait_length)
+                drawdebugSquares([sFR, sFL, sRR, sRL],yaw)
 
             linecount += 1
         p.addUserDebugLine(lastPos,targetPos,[1,0,0]) 
@@ -277,9 +292,8 @@ while(1):
 
     #if keys.get(ord(' ')): #D (change to space later)
     if ord(' ') in keys and keys[ord(' ')]&p.KEY_WAS_TRIGGERED:
-        p.removeAllUserDebugItems()
         p.resetBasePositionAndOrientation(dogId, dogStartPos, dogStartOrientation)
-        drawdebugSquares([sFL, sFR, sRL, sRR])
+        #drawdebugSquares([sFL, sFR, sRL, sRR])
         lastPos = dogStartPos
         targetPos = dogStartPos
 
@@ -304,7 +318,9 @@ while(1):
         count = 0
         for t in np.arange(0, 1, ts):
             
-            p.resetDebugVisualizerCamera( cameraDistance=2, cameraYaw=30, cameraPitch=-30, cameraTargetPosition=targetPos)
+            #p.resetDebugVisualizerCamera( cameraDistance=2, cameraYaw=30, cameraPitch=-30, cameraTargetPosition=targetPos)
+            dogPos, _ = p.getBasePositionAndOrientation(dogId)
+            p.resetDebugVisualizerCamera( cameraDistance=2, cameraYaw=30, cameraPitch=-30, cameraTargetPosition=dogPos)
             targetPos = bezier(t)
             heading = targetPos-lastPos
             #print(heading)
@@ -322,9 +338,7 @@ while(1):
 
             # Move feet
             ## TODO: sample footpath with timestep to get desired XYs
-            path_period = 1550
-            gait_length = 0.2
-            body_height = 0.3
+
             # t0 = 0.5
             t0 = count / path_period
             t1 = t0 + 0.5 # assuming that the swing and contact portions of the gait are exactly the same length!!
