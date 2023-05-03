@@ -1,17 +1,18 @@
 import numpy as np
 import time
 import math
-from tqdm import tqdm
+# from tqdm import tqdm
 import pybullet as p
 import pybullet_data
-from pybullet_utils import bullet_client
-from envs import env_builder
+# from pybullet_utils import bullet_client
+# from envs import env_builder
 from robots import robot_config
-from dataclasses import dataclass
-from PIL import Image
+# from dataclasses import dataclass
+# from PIL import Image
+from util import leg_ik, foot_path
 
 
-from quadsim.robots import a1
+# from quadsim.robots import a1
 
 def createBezier(pts):
     p0 = np.array(pts[0])
@@ -72,11 +73,12 @@ physicsClient = p.connect(p.GUI)
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
 p.configureDebugVisualizer(p.COV_ENABLE_GUI,0)
 p.setGravity(0, 0, -10)
-planeId = p.loadURDF('plane.urdf')
+# planeId = p.loadURDF('plane.urdf')
 
 
 # Create dog and grab ID
-dogStartPos = [0, 0, 0.3]
+h = 0.37
+dogStartPos = [0, 0, h]
 dogStartOrientation = p.getQuaternionFromEuler([0, 0, 0])
 dogId = p.loadURDF("model/a1.urdf", [0, 0, 0.45], dogStartOrientation)
 targetPos = dogStartPos
@@ -105,14 +107,17 @@ JOINTS = [
     11,13,14,
     16,18,19
 ]
+
+
+
 p.setJointMotorControlArray(dogId,JOINTS,controlMode=p.POSITION_CONTROL,targetPositions=DEFAULT_JOINT_POS)
 
 
 # Create Control Points
-p0 = [0, 0, .3]
-p1 = [2, 0, .3]
-p2 = [3, 3, .3]
-p3 = [0, 4, .3]
+p0 = [0, 0, h]
+p1 = [2, 0, h]
+p2 = [3, 3, h]
+p3 = [0, 4, h]
 
 p1Id = p.loadURDF("model/testcube.urdf", p1)
 p2Id = p.loadURDF("model/testcube.urdf", p2)
@@ -311,17 +316,48 @@ while(1):
                 p.addUserDebugLine(lastPos,targetPos,[1,0,0]) 
                 p.addUserDebugLine(lastPos,lastPos+heading,[0,0,1])
                 lastPos = targetPos
-            # Move Feet
-            if (count % 1000) == 0:
-                # Move leg
-                FR, FL, RR, RL, sFR, sFL, sRR, sRL = getStepPositions(targetPos,yaw)
-                drawdebugSquares([sFR, sFL, sRR, sRL])
-                if rightstep:
-                    stepAngles = p.calculateInverseKinematics2(dogId, [5,10,15,20], [sFR,FL,RR,sRL])
-                else:
-                    stepAngles = p.calculateInverseKinematics2(dogId, [5,10,15,20], [FR,sFL,sRR,RL])
-                p.setJointMotorControlArray(dogId,JOINTS,controlMode=p.POSITION_CONTROL,targetPositions=stepAngles)
-                rightstep = not rightstep
+
+            # Move feet
+            ## TODO: sample footpath with timestep to get desired XYs
+            path_period = 1000
+            gait_length = 0.1
+            body_height = 0.3
+            # t0 = 0.5
+            t0 = count / path_period
+            t1 = t0 + 0.5 # assuming that the swing and contact portions of the gait are exactly the same length!!
+
+            x0, y0 = foot_path(t = t0, length=gait_length, body_height=body_height)
+            x1, y1 = foot_path(t = t1, length=gait_length, body_height=body_height)
+            print(f"x0: {x0}, y0: {y0}")
+            ## convert the desired xy positions into angles
+            # theta, phi = shoulder, wrist
+            theta0, phi0 = leg_ik(x0, y0, 0.2, 0.2)
+            theta1, phi1 = leg_ik(x1, y1, 0.2, 0.2)
+            
+
+            print(theta0, phi0)
+            
+            ## TODO: Pass computed IK angles into pybullet sim 
+            pair0 = [0, theta0, phi0]
+            pair1 = [0, theta1, phi1]
+
+            stepAngles = np.array([pair0, pair1, pair1, pair0])
+            stepAngles = stepAngles.flatten()
+
+            p.setJointMotorControlArray(dogId,JOINTS,controlMode=p.POSITION_CONTROL,targetPositions=stepAngles)
+            
+            # # Move Feet
+            # if (count % 1000) == 0:
+            #     # Move leg
+            #     FR, FL, RR, RL, sFR, sFL, sRR, sRL = getStepPositions(targetPos,yaw)
+            #     drawdebugSquares([sFR, sFL, sRR, sRL])
+            #     if rightstep:
+            #         stepAngles = p.calculateInverseKinematics2(dogId, [5,10,15,20], [sFR,FL,RR,sRL])
+            #     else:
+            #         stepAngles = p.calculateInverseKinematics2(dogId, [5,10,15,20], [FR,sFL,sRR,RL])
+            #     p.setJointMotorControlArray(dogId,JOINTS,controlMode=p.POSITION_CONTROL,targetPositions=stepAngles)
+            #     print(stepAngles)
+            #     rightstep = not rightstep
 
             #jointindices =    [ 1,   3,   4,   6,   8,   9,  11,  13,  14,  16,  18,  19]
             #targetpositions = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
