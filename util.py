@@ -33,30 +33,35 @@ def leg_ik(x, y, l1, l2):
     
     # calculate the angle of the first joint
     theta1 = alpha - beta
+    theta1 = 2 * (math.pi - theta1) + theta1
     
     # calculate the angle of the second joint
     theta2 = math.pi - gamma
+    theta2 = 2 * (math.pi - theta2) + theta2
     
     return (theta1, theta2)
 
-def foot_path(t, length=0.2, body_height = 0.3, x_offset=0.25, y_offset=0):
+def foot_path(t, length=0.2, body_height = 0.3, gait_height = 0.05):
     # t in range [0, 1]
     # swing portion of code
     t = t % 1
-    # if t <= 0.5:
-    #     t_temp = t * 2 # rescaling for swing portion
-    #     x = ((t_temp) * length) - length/2
-    #     y = math.cos(x) * 0.1
-    #     y = (body_height - y)
-    # else:
-    #     # contact with floor
-    #     t_temp = (t - 0.5) * 2
-    #     x = ((1-t_temp) * length) - length/2
-    #     y = body_height
-    angle = 2 * math.pi * t
-    radius = 0.1
-    x = x_offset + 0#radius * math.cos(angle)
-    y = y_offset + 0.3# body_height - radius * math.sin(angle)
-    return x, y
+    # t = 1 - t
+    if t <= 0.5:
+        t_temp = t * 2 # rescaling for swing portion
+        x = ((t_temp) * length) - length/2
+        y = math.cos(x) * gait_height
+        y = (body_height - y)
+    else:
+        # contact with floor
+        t_temp = (t - 0.5) * 2
+        x = ((1-t_temp) * length) - length/2
+        y = body_height
+
+    ## DEBUG
+    # angle = 2 * math.pi * t
+    # radius = 0.1
+    # x = radius * math.cos(angle)
+    # y = body_height - radius * math.sin(angle)
+    return y, x
 
 

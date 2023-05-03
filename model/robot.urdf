@@ -82,6 +82,7 @@
     <child link="FR_hip"/>
     <axis xyz="1 0 0"/>
     <dynamics damping="0" friction="0"/>
+    <limit effort="20" velocity="52.4"/>
   </joint>
   <link name="FR_hip">
     <visual>
@@ -128,6 +129,7 @@
     <child link="FR_upper"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0" friction="0"/>
+    <limit effort="55" velocity="28.6"/>
   </joint>
   <link name="FR_upper">
     <visual>
@@ -155,6 +157,7 @@
     <child link="FR_lower"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0" friction="0"/>
+    <limit effort="55" velocity="28.6"/>
   </joint>
   <link name="FR_lower">
     <visual>
@@ -236,6 +239,7 @@
     <child link="FL_hip"/>
     <axis xyz="1 0 0"/>
     <dynamics damping="0" friction="0"/>
+    <limit effort="20" velocity="52.4"/>
   </joint>
   <link name="FL_hip">
     <visual>
@@ -282,6 +286,7 @@
     <child link="FL_upper"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0" friction="0"/>
+    <limit effort="55" velocity="28.6"/>
   </joint>
   <link name="FL_upper">
     <visual>
@@ -309,6 +314,7 @@
     <child link="FL_lower"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0" friction="0"/>
+    <limit effort="55" velocity="28.6"/>
   </joint>
   <link name="FL_lower">
     <visual>
@@ -390,6 +396,7 @@
     <child link="RR_hip"/>
     <axis xyz="1 0 0"/>
     <dynamics damping="0" friction="0"/>
+    <limit effort="20" velocity="52.4"/>
   </joint>
   <link name="RR_hip">
     <visual>
@@ -436,6 +443,7 @@
     <child link="RR_upper"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0" friction="0"/>
+    <limit effort="55" velocity="28.6"/>
   </joint>
   <link name="RR_upper">
     <visual>
@@ -463,6 +471,7 @@
     <child link="RR_lower"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0" friction="0"/>
+    <limit effort="55" velocity="28.6"/>
   </joint>
   <link name="RR_lower">
     <visual>
@@ -544,6 +553,7 @@
     <child link="RL_hip"/>
     <axis xyz="1 0 0"/>
     <dynamics damping="0" friction="0"/>
+    <limit effort="20" velocity="52.4"/>
   </joint>
   <link name="RL_hip">
     <visual>
@@ -590,6 +600,7 @@
     <child link="RL_upper"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0" friction="0"/>
+    <limit effort="55" velocity="28.6"/>
   </joint>
   <link name="RL_upper">
     <visual>
@@ -617,6 +628,7 @@
     <child link="RL_lower"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0" friction="0"/>
+    <limit effort="55" velocity="28.6"/>
   </joint>
   <link name="RL_lower">
     <visual>

@@ -73,14 +73,17 @@ physicsClient = p.connect(p.GUI)
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
 p.configureDebugVisualizer(p.COV_ENABLE_GUI,0)
 p.setGravity(0, 0, -10)
-# planeId = p.loadURDF('plane.urdf')
+planeId = p.loadURDF('plane.urdf')
 
 
 # Create dog and grab ID
-h = 0.37
+h = 0.3
 dogStartPos = [0, 0, h]
 dogStartOrientation = p.getQuaternionFromEuler([0, 0, 0])
-dogId = p.loadURDF("model/a1.urdf", [0, 0, 0.45], dogStartOrientation)
+dogId = p.loadURDF("model/robot.urdf", [0, 0, 0.45], dogStartOrientation)
+
+
+# dogId = p.loadURDF("model/robot.urdf", [0, 0, 0.45], dogStartOrientation)
 targetPos = dogStartPos
 numJoints = p.getNumJoints(dogId)
 
@@ -319,8 +322,8 @@ while(1):
 
             # Move feet
             ## TODO: sample footpath with timestep to get desired XYs
-            path_period = 1000
-            gait_length = 0.1
+            path_period = 1550
+            gait_length = 0.2
             body_height = 0.3
             # t0 = 0.5
             t0 = count / path_period
@@ -328,14 +331,11 @@ while(1):
 
             x0, y0 = foot_path(t = t0, length=gait_length, body_height=body_height)
             x1, y1 = foot_path(t = t1, length=gait_length, body_height=body_height)
-            print(f"x0: {x0}, y0: {y0}")
+
             ## convert the desired xy positions into angles
             # theta, phi = shoulder, wrist
             theta0, phi0 = leg_ik(x0, y0, 0.2, 0.2)
             theta1, phi1 = leg_ik(x1, y1, 0.2, 0.2)
-            
-
-            print(theta0, phi0)
             
             ## TODO: Pass computed IK angles into pybullet sim 
             pair0 = [0, theta0, phi0]
