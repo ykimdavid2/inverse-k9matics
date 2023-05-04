@@ -169,6 +169,7 @@ closeup = False
 if(closeup):
     p.resetDebugVisualizerCamera( cameraDistance=.75, cameraYaw=30, cameraPitch=-30, cameraTargetPosition=dogStartPos)
 
+forced = True
 
 # Execution Loop
 while(1):
@@ -274,7 +275,10 @@ while(1):
         FR, FL, RR, RL, sFR, sFL, sRR, sRL = getStepPositions(dogPos,0)
         stepAngles = p.calculateInverseKinematics2(dogId, [5,10,15,20], [FR,sFL,sRR,RL])
         p.setJointMotorControlArray(dogId,JOINTS,controlMode=p.POSITION_CONTROL,targetPositions=stepAngles)
-    #if keys.get(ord('i')) and keys[ord('i')]&p.KEY_WAS_TRIGGERED:  
+    if keys.get(ord('i')) and keys[ord('i')]&p.KEY_WAS_TRIGGERED:  
+        forced = not forced
+
+
     #    stepAngles = p.calculateInverseKinematics2(dogId, [1,6,11,16], [sFR+[0,0,.2],sFL+[0,0,.2],sRR+[0,0,.2],sRL+[0,0,.2]])
     #    p.setJointMotorControlArray(dogId,JOINTS,controlMode=p.POSITION_CONTROL,targetPositions=stepAngles)
     
@@ -358,27 +362,14 @@ while(1):
             stepAngles = np.array([pair0, pair1, pair1, pair0])
             stepAngles = stepAngles.flatten()
 
-            p.setJointMotorControlArray(dogId,JOINTS,controlMode=p.POSITION_CONTROL,targetPositions=stepAngles)
-            
-            # # Move Feet
-            # if (count % 1000) == 0:
-            #     # Move leg
-            #     FR, FL, RR, RL, sFR, sFL, sRR, sRL = getStepPositions(targetPos,yaw)
-            #     drawdebugSquares([sFR, sFL, sRR, sRL])
-            #     if rightstep:
-            #         stepAngles = p.calculateInverseKinematics2(dogId, [5,10,15,20], [sFR,FL,RR,sRL])
-            #     else:
-            #         stepAngles = p.calculateInverseKinematics2(dogId, [5,10,15,20], [FR,sFL,sRR,RL])
-            #     p.setJointMotorControlArray(dogId,JOINTS,controlMode=p.POSITION_CONTROL,targetPositions=stepAngles)
-            #     print(stepAngles)
-            #     rightstep = not rightstep
+            #stepAngles = p.calculateInverseKinematics2(dogId, [5,10,15,20], [sFR,FL,RR,sRL])
 
-            #jointindices =    [ 1,   3,   4,   6,   8,   9,  11,  13,  14,  16,  18,  19]
-            #targetpositions = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-            #forces =          [50,  50,  50,  50,  50,  50,  50,  50,  50,  50,  50,  50]
-            #p.setJointMotorControlArray(dogId,[8, 13],p.POSITION_CONTROL,targetPositions=[0.5, 0.5],forces=[50, 50])
-            #p.setJointMotorControlArray(dogId,[3, 18],p.POSITION_CONTROL,targetPositions=[0.5, 0.5],forces=[1000, 1000])
-            p.resetBasePositionAndOrientation(dogId, targetPos, newOrientation)
+            p.setJointMotorControlArray(dogId,JOINTS,controlMode=p.POSITION_CONTROL,targetPositions=stepAngles)
+
+            # FORCED vs FREE MOTION
+            if forced:
+                p.resetBasePositionAndOrientation(dogId, dogPos, newOrientation)
+
             p.stepSimulation()
             count += 1
 
