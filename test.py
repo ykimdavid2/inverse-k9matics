@@ -296,6 +296,7 @@ while(1):
 
     #if keys.get(ord(' ')): #D (change to space later)
     if ord(' ') in keys and keys[ord(' ')]&p.KEY_WAS_TRIGGERED:
+        error = 0
         p.resetBasePositionAndOrientation(dogId, dogStartPos, dogStartOrientation)
         #drawdebugSquares([sFL, sFR, sRL, sRR])
         lastPos = dogStartPos
@@ -368,91 +369,15 @@ while(1):
 
             # FORCED vs FREE MOTION
             if forced:
-                p.resetBasePositionAndOrientation(dogId, dogPos, newOrientation)
+                p.resetBasePositionAndOrientation(dogId, targetPos, newOrientation)
 
             p.stepSimulation()
             count += 1
-
+            current, _ = p.getBasePositionAndOrientation(dogId)
+            error = current-targetPos
         p.addUserDebugLine(lastPos,targetPos,[1,0,0]) 
         for t in np.arange(0, 1, .005):
             p.stepSimulation()
     
-    #dogPos, dogOrn = p.getBasePositionAndOrientation(dogId)
-    #rigidBody.setWorldTransform
-    #force = 300 * (np.array(targetPos) - np.array(dogPos))
-    #p.applyExternalForce(objectUniqueId=dogId, linkIndex=-1,
-    #                     forceObj=force, posObj=dogPos, flags=p.WORLD_FRAME)
     
     time.sleep(1./240.)
-    #time.sleep(1./50.)
-
-"""
-while(1):
-    p.stepSimulation()
-
-
-    dogPos, dogOrn = p.getBasePositionAndOrientation(dogId)
-
-    force = 300 * (np.array(targetPos) - np.array(dogPos))
-    p.applyExternalForce(objectUniqueId=dogId, linkIndex=-1,
-                         forceObj=force, posObj=dogPos, flags=p.WORLD_FRAME)
-
-    #keys = p.getKeyboardEvents()
-    time.sleep(1./240.)
-
-    #do nothing
-    """
-
-# Run the simulation for a fixed amount of steps.
-"""for i in range(20):
-    position, orientation = p.getBasePositionAndOrientation(r2d2)
-    x, y, z = position
-    roll, pitch, yaw = p.getEulerFromQuaternion(orientation)
-    print(f"{i:3}: x={x:0.10f}, y={y:0.10f}, z={z:0.10f}), roll={roll:0.10f}, pitch={pitch:0.10f}, yaw={yaw:0.10f}")
-    p.stepSimulation()
-
-
-for i in range (10000):
-   p.stepSimulation()
-   time.sleep(1./100.)"""
-
-#p.disconnect()
-
-"""
-def getPositionOnClick():
-    if (POSITION_NOT_SET):
-        mouseEvents = p.getMouseEvents(physicsClient)
-        if (len(mouseEvents) > 0 and mouseEvents[0][0] == 2):
-            mouseEvent = mouseEvents[0]
-            #POSITION_NOT_SET = False
-            mouseX = mouseEvent[1]
-            mouseY = mouseEvent[2]
-
-            cam = p.getDebugVisualizerCamera()
-            camX = cam[0]
-            camY = cam[1]
-
-            vec = np.zeros(4)
-
-            viewM = np.array(cam[2]).reshape(4,4)
-            projM = np.array(cam[3]).reshape(4,4)
-
-            M = viewM @ projM
-            M_inv = np.linalg.inv(M)
-
-            vec[0] = (2.0 * (mouseX / camX)) - 1.0
-            vec[1] = 1.0 - (2.0 * (mouseY / camY))
-            vec[2] = 1.0
-            vec[3] = 1.0
-
-            pos = vec @ M_inv
-
-            w = pos[3]
-            pos[0] /= w
-            pos[1] /= w
-            pos[2] = 0
-
-
-            print(pos)
-            targetPos = [pos[0], pos[1], 0]
-"""
